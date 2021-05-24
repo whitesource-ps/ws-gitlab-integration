@@ -36,6 +36,11 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Create Standalone executable
         run: pyinstaller --onefile ./gitlab_integration/ws2gl_format_convertor.py
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ws2gl_format_convertor
+          path: dist/ws2gl_format_convertor
       - name: Full test - License
         run: dist/ws2gl_format_convertor -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t license
       - name: Full test - Security Violance

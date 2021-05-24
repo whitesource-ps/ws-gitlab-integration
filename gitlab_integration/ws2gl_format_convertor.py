@@ -32,12 +32,14 @@ def convert_license(conn):
         lics_lib = lib['licenses']
         curr_licenses = []
         for lic in lics_lib:
-            gl_lic = {'id': lic['spdx_license_dict']['licenseId'],
-                      'name': lic['spdx_license_dict']['name'],
-                      'url': lic['spdx_license_dict']['detailsUrl']}
-
-            licenses[gl_lic['id']] = gl_lic
-            curr_licenses.append(lic['spdx_license_dict']['licenseId'])
+            if lic.get('spdx_license_dict'):
+                gl_lic = {'id': lic['spdx_license_dict']['licenseId'],
+                          'name': lic['spdx_license_dict']['name'],
+                          'url': lic['spdx_license_dict']['detailsUrl']}
+                licenses[gl_lic['id']] = gl_lic
+                curr_licenses.append(lic['spdx_license_dict']['licenseId'])
+            else:
+                logging.warning(f"SPDX data is missing on library {lib['name']} - license: {lic['name']}")
 
         dependencies.append({'name': lib['name'],
                              'version': lib['version'],
