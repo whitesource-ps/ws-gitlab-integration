@@ -63,10 +63,10 @@ if __name__ == '__main__':
     logging.info(f"Generating {args.conv_type} report")
     if args.conv_type == LICENSE:
         ret = convert_license(ws_conn)
-        filename = "gitlab-license-model-test.json"
+        filename = "gl-license-scanning-report.json"
     elif args.conv_type == SECURITY:
         ret = convert_security(ws_conn)
-        filename = "gitlab-security-violation-model-test.json"
+        filename = "gl-security-violation-model.json"
 
     full_path = os.path.join(args.output_dir, filename)
     logging.debug(f"Saving file to: {full_path}")
