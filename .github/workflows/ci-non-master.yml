@@ -34,6 +34,17 @@ jobs:
         run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t license
       - name: Full test (Security Violance)
         run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t security -o /tmp
+      - name: Prepare tag
+        id: prep
+        run: |
+          DOCKER_IMAGE=ws-gl-int
+          VERSION=latest
+          TAGS="${DOCKER_IMAGE}:${VERSION}"
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            TAGS="$TAGS,${DOCKER_IMAGE}:${VERSION}"
+          fi
+          echo ::set-output name=tags::${TAGS}
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v1
         with:
@@ -44,6 +55,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: |
-            docker.pkg.github.com/${{ github.repository }}/octo-image:${{ github.sha }}
-            docker.pkg.github.com/${{ github.repository }}/octo-image:${{ github.ref }}
+          tags: ${{ steps.prep.outputs.tags }}
