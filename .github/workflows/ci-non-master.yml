@@ -1,4 +1,4 @@
-name: WS SBOM report generator - Non Master
+name: WS PS GitLab Integration - Non Master
 on:
   push:
     branches:
@@ -37,7 +37,7 @@ jobs:
       - name: Prepare tag
         id: prep
         run: |
-          DOCKER_IMAGE=whitesourcetools/ws-gl-int
+          DOCKER_IMAGE=whitesourcetools/ws-gitlab-integration/ws-gl-int
           VERSION=latest
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           if [[ $GITHUB_REF == refs/tags/* ]]; then

@@ -1,4 +1,4 @@
-name: WS SBOM report generator - Master
+name: WS PS GitLab Integration - Master
 on:
   push:
     branches:
