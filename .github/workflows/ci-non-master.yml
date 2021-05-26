@@ -5,7 +5,7 @@ on:
       - '**'
       - '!master'
 jobs:
-  build-and-publish:
+  build-and-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,6 +34,9 @@ jobs:
         run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t license
       - name: Full test (Security Violance)
         run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t security -o /tmp
+  publish:
+    runs-on: ubuntu-latest
+    steps:
       - name: Prepare tag
         id: prep
         run: |
