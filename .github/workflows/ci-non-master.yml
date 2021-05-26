@@ -37,6 +37,17 @@ jobs:
   registry-publish:
     runs-on: ubuntu-latest
     steps:
+      - name: Prepare tag
+        id: prep
+        run: |
+          DOCKER_IMAGE=docker.pkg.github.com/${{ github.repository }}/ws-gl-int
+          VERSION=latest
+          TAGS="${DOCKER_IMAGE}:${VERSION}"
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            TAGS="$TAGS,${DOCKER_IMAGE}:${VERSION}"
+          fi
+          echo ::set-output name=tags::${TAGS}
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v1
         with:
@@ -47,7 +58,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: |
-            docker.pkg.github.com/${{ github.repository }}/ws-gl-int:${{ github.sha }}
-            docker.pkg.github.com/${{ github.repository }}/ws-gl-int:${{ github.ref }}
-
+          tags: ${{ steps.prep.outputs.tags }}
