@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import json
 import os
 
@@ -66,7 +67,7 @@ if __name__ == '__main__':
         filename = "gl-license-scanning-report.json"
     elif args.conv_type == SECURITY:
         ret = convert_security(ws_conn)
-        filename = "gl-security-violation-model.json"
+        filename = "gl-dependency-scanning-report.json"
 
     full_path = os.path.join(args.output_dir, filename)
     logging.debug(f"Saving file to: {full_path}")
