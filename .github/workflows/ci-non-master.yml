@@ -33,11 +33,7 @@ jobs:
       - name: Full test (License)
         run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t license
       - name: Full test (Security Violance)
-        run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t security -o /tmp
-
-  docker:
-    runs-on: ubuntu-latest
-    steps:
+        run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_ZENBOT }} -t dependency -o /tmp
       - name: Prepare tag
         id: prep
         run: |
