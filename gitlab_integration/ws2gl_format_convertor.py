@@ -7,7 +7,7 @@ import logging
 import sys
 
 SCHEMA_VER = "2.1"
-SECURITY = "security"
+DEPENDENCY = "dependency"
 LICENSE = "license"
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('-u', '--userKey', help="WS User Key", dest='ws_user_key', required=True)
     parser.add_argument('-k', '--token', help="WS Token", dest='ws_token', required=True)
     parser.add_argument('-a', '--wsUrl', help="WS URL", dest='ws_url', default="saas")
-    parser.add_argument('-t', '--conversionType', help="Conversion Type", choices=[LICENSE, SECURITY], dest='conv_type', required=True)
+    parser.add_argument('-t', '--conversionType', help="Conversion Type", choices=[LICENSE, DEPENDENCY], dest='conv_type', required=True)
     parser.add_argument('-o', '--outputDir', help="Output Dir", dest='output_dir', default=".")
 
     return parser.parse_args()
@@ -53,7 +53,7 @@ def convert_license(conn):
             'dependencies': dependencies}
 
 
-def convert_security(conn):
+def convert_dependency(conn):
     return {}
 
 
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     if args.conv_type == LICENSE:
         ret = convert_license(ws_conn)
         filename = "gl-license-scanning-report.json"
-    elif args.conv_type == SECURITY:
-        ret = convert_security(ws_conn)
+    elif args.conv_type == DEPENDENCY:
+        ret = convert_dependency(ws_conn)
         filename = "gl-dependency-scanning-report.json"
 
     full_path = os.path.join(args.output_dir, filename)
