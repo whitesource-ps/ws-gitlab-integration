@@ -79,8 +79,8 @@ def convert_license(conn):
                 logging.warning(f"SPDX data is missing on library {lib['name']} - license: {lic['name']}")
 
         dependencies.append({'name': lib['name'],
-                             'version': lib['version'],
-                             'package_manager': lib['type'],                # TODO: MAKE THIS MORE ACCURATE
+                             'version': lib.get('version'),     # TODO: ADD METHOD in ws_utilities to break LIB-1.2.3.SFX to GAV
+                             'package_manager': lib['type'],    # TODO: MAKE THIS MORE ACCURATE
                              'path': get_lib_locations(lib_loc, lib),
                              'licenses': curr_licenses})
 
@@ -123,12 +123,12 @@ def convert_dependency(conn):
         return gl_vul
 
     vulnerabilities = conn.get_vulnerability(token=args.ws_token)
-    inventory_list = ws_utilities.convert_dict_list_to_dict(conn.get_inventory(token=args.ws_token), 'keyUuid')
+    inventory_dict = ws_utilities.convert_dict_list_to_dict(conn.get_inventory(token=args.ws_token), 'keyUuid')
 
     gl_vuls = []
     for vul in vulnerabilities:
         lib_uuid = vul['library']['keyUuid']
-        gl_vul = convert_to_gl_vul(vul, inventory_list[lib_uuid])
+        gl_vul = convert_to_gl_vul(vul, inventory_dict[lib_uuid])
         gl_vuls.append(gl_vul)
 
     return {'version': SCHEMA_VER,
