@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import json
 import os
-
 from ws_sdk import WS, ws_constants, ws_utilities
 import logging
 import sys
@@ -24,6 +23,27 @@ def parse_args():
     parser.add_argument('-o', '--outputDir', help="Output Dir", dest='output_dir', default=".")
 
     return parser.parse_args()
+
+
+def validate_json(json_to_validate: dict):
+    from jsonschema import validate, exceptions as json_exceptions
+
+
+    if args.conv_type == LICENSE:
+        f_name = "json_schemas/v2.1.json"
+    elif args.conv_type == DEPENDENCY:
+        f_name = "json_schemas/dependency-scanning-report-format.json"
+
+    with open(f_name, 'r') as f:
+        json_schema = f.read()
+
+    json_schema_dict = json.loads(json_schema)
+    try:
+        validate(instance=json_to_validate, schema=json_schema_dict)
+    except json_exceptions.SchemaError or json_exceptions.ValidationError:
+        logging.exception("Validating failed JSON with schema")
+        return False
+    return True
 
 
 def convert_license(conn):
@@ -52,7 +72,7 @@ def convert_license(conn):
             if lic.get('spdx_license_dict'):
                 gl_lic = {'id': lic['spdx_license_dict']['licenseId'],
                           'name': lic['spdx_license_dict']['name'],
-                          'url': lic['spdx_license_dict']['detailsUrl']}
+                          'url': lic['url']}
                 licenses[gl_lic['id']] = gl_lic
                 curr_licenses.append(lic['spdx_license_dict']['licenseId'])
             else:
@@ -113,7 +133,7 @@ def convert_dependency(conn):
 
     return {'version': SCHEMA_VER,
             'vulnerabilities': gl_vuls,
-            'remediations': ""}     # TODO: ADD REMEDIATION?
+            'remediations': ""}
 
 
 if __name__ == '__main__':
@@ -127,6 +147,9 @@ if __name__ == '__main__':
     elif args.conv_type == DEPENDENCY:
         ret = convert_dependency(ws_conn)
         filename = "gl-dependency-scanning-report.json"
+
+    if os.environ.get("DEV_MODE"):
+        validate_json(ret)
 
     full_path = os.path.join(args.output_dir, filename)
     logging.debug(f"Saving file to: {full_path}")
