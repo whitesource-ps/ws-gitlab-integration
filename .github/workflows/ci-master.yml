@@ -72,3 +72,11 @@ jobs:
         with:
           push: ${{ $GITHUB_REF == refs/tags/v* }}
           tags: ${{ steps.prep.outputs.tags }}
+      - name: confluence-markdown-sync
+        uses: cupcakearmy/confluence-markdown-sync@v1
+        with:
+          from: README.md
+          to: 2141159930
+          cloud: whitesource
+          user: ${{ secrets.CONFLUENCE_USER }}
+          token: ${{ secrets.CONFLUENCE_TOKEN }}

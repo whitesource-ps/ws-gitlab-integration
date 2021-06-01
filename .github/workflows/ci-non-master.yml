@@ -38,7 +38,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=whitesourcetools/ws-gl-int
-          VERSION=latest
+          VERSION=testing
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}

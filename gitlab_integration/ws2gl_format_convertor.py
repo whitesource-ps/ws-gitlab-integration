@@ -5,7 +5,8 @@ from ws_sdk import WS, ws_constants, ws_utilities
 import logging
 import sys
 
-SCHEMA_VER = "2.1"
+LICENSE_SCHEMA_V = "2.1"
+DEPENDENCY_SCHEMA_V = "14.0.2"
 DEPENDENCY = "dependency"
 LICENSE = "license"
 VUL_DB_URL = "https://www.whitesourcesoftware.com/vulnerability-database"
@@ -27,7 +28,6 @@ def parse_args():
 
 def validate_json(json_to_validate: dict):
     from jsonschema import validate, exceptions as json_exceptions
-
 
     if args.conv_type == LICENSE:
         f_name = "json_schemas/v2.1.json"
@@ -84,7 +84,7 @@ def convert_license(conn):
                              'path': get_lib_locations(lib_loc, lib),
                              'licenses': curr_licenses})
 
-    return {'version': SCHEMA_VER,
+    return {'version': LICENSE_SCHEMA_V,
             'licenses': list(licenses.values()),
             'dependencies': dependencies}
 
@@ -131,9 +131,10 @@ def convert_dependency(conn):
         gl_vul = convert_to_gl_vul(vul, inventory_dict[lib_uuid])
         gl_vuls.append(gl_vul)
 
-    return {'version': SCHEMA_VER,
+    return {'version': DEPENDENCY_SCHEMA_V,
             'vulnerabilities': gl_vuls,
-            'remediations': ""}
+            'remediations': [],
+            'dependency_files': []}
 
 
 if __name__ == '__main__':
