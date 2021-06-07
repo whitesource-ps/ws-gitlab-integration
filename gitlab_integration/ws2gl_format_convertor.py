@@ -18,7 +18,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='WS to GitLab convertor')
     parser.add_argument('-u', '--userKey', help="WS User Key", dest='ws_user_key', required=True)
-    parser.add_argument('-k', '--token', help="WS Token", dest='ws_token', required=True)
+    parser.add_argument('-k', '--token', help="WS Project Token", dest='ws_token', required=True)
     parser.add_argument('-a', '--wsUrl', help="WS URL", dest='ws_url', default="saas")
     parser.add_argument('-t', '--conversionType', help="Conversion Type", choices=[LICENSE, DEPENDENCY], dest='conv_type', required=True)
     parser.add_argument('-o', '--outputDir', help="Output Dir", dest='output_dir', default=".")
@@ -54,10 +54,14 @@ def convert_license(conn):
                 logging.warning(f"Found {len(library_location['locations'])} locations for lib {library['name']}. Using the first one")
             loc_name = locations[0].get('path')
         else:
-            logging.error(f"No locations found for lib {library['name']} ")
+            logging.warning(f"No locations found for lib {library['name']} ")
             loc_name = None
 
         return loc_name
+
+    def get_package_manager(language):
+        pkg_man = ws_utilities.get_package_managers_by_language(language)
+        return "unknown" if not pkg_man else pkg_man[0]
 
     licenses = {}
     dependencies = []
@@ -80,7 +84,7 @@ def convert_license(conn):
 
         dependencies.append({'name': lib['name'],
                              'version': lib.get('version'),     # TODO: ADD METHOD in ws_utilities to break LIB-1.2.3.SFX to GAV
-                             'package_manager': lib['type'],    # TODO: MAKE THIS MORE ACCURATE
+                             'package_manager': get_package_manager(lib['type']).capitalize(),    # TODO: MAKE THIS MORE ACCURATE
                              'path': get_lib_locations(lib_loc, lib),
                              'licenses': curr_licenses})
 
@@ -151,6 +155,7 @@ if __name__ == '__main__':
 
     if os.environ.get("DEV_MODE"):
         validate_json(ret)
+        filename = f"{ws_conn.get_scope_name_by_token(token=args.ws_token)}-{filename}"
 
     full_path = os.path.join(args.output_dir, filename)
     logging.debug(f"Saving file to: {full_path}")

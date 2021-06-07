@@ -1,2 +1,2 @@
-ws-sdk~=0.3
+ws-sdk~=0.3.1
 spdx-tools~=0.6.1
