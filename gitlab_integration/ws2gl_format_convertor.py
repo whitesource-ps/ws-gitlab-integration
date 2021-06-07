@@ -84,7 +84,7 @@ def convert_license(conn):
 
         dependencies.append({'name': lib['name'],
                              'version': lib.get('version'),     # TODO: ADD METHOD in ws_utilities to break LIB-1.2.3.SFX to GAV
-                             'package_manager': get_package_manager(lib['type']).capitalize(),    # TODO: MAKE THIS MORE ACCURATE
+                             'package_manager': get_package_manager(lib['type']).capitalize(),
                              'path': get_lib_locations(lib_loc, lib),
                              'licenses': curr_licenses})
 
