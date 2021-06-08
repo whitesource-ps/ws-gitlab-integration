@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import json
 import os
+
 from ws_sdk import WS, ws_constants, ws_utilities
 import logging
 import sys
@@ -13,7 +14,7 @@ DEPENDENCY = "dependency"
 LICENSE = "license"
 VUL_DB_URL = "https://www.whitesourcesoftware.com/vulnerability-database"
 
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
 def parse_args():
@@ -30,18 +31,19 @@ def parse_args():
 
 def validate_json(json_to_validate: dict):
     from jsonschema import validate, exceptions as json_exceptions
+    import requests
+    import json
 
     if args.conv_type == LICENSE:
-        f_name = "json_schemas/v2.1.json"
+        url = 'https://gitlab.com/gitlab-org/security-products/analyzers/license-finder/-/raw/main/spec/fixtures/schema/v2.1.json'
     elif args.conv_type == DEPENDENCY:
-        f_name = "json_schemas/dependency-scanning-report-format.json"
+        url = 'https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/raw/master/dist/dependency-scanning-report-format.json'
 
-    with open(f_name, 'r') as f:
-        json_schema = f.read()
+    resp = requests.get(url=url)
+    json_schema = json.loads(resp.text)
 
-    json_schema_dict = json.loads(json_schema)
     try:
-        validate(instance=json_to_validate, schema=json_schema_dict)
+        validate(instance=json_to_validate, schema=json_schema)
     except json_exceptions.SchemaError or json_exceptions.ValidationError:
         logging.exception("Validating failed JSON with schema")
         return False
@@ -157,7 +159,12 @@ if __name__ == '__main__':
 
     if os.environ.get("DEV_MODE"):
         validate_json(ret)
-        filename = f"{ws_conn.get_scope_name_by_token(token=args.ws_token)}-{filename}"
+        scope_name = ws_conn.get_scope_name_by_token(token=args.ws_token)
+
+        for char in [':', '#', '*', '\\']:
+            scope_name = scope_name.replace(char, '_')
+
+        filename = f"{scope_name}-{filename}"
 
     full_path = os.path.join(args.output_dir, filename)
     logging.debug(f"Saving file to: {full_path}")
