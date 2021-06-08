@@ -5,6 +5,8 @@ from ws_sdk import WS, ws_constants, ws_utilities
 import logging
 import sys
 
+SCANNER_ID = "ws-gl-int"
+
 LICENSE_SCHEMA_V = "2.1"
 DEPENDENCY_SCHEMA_V = "14.0.2"
 DEPENDENCY = "dependency"
@@ -114,7 +116,7 @@ def convert_dependency(conn):
                   "severity": vulnerability['severity'].capitalize(),
                   "confidence": "Confirmed",
                   "solution": get_solution(),
-                  "scanner": {"id": "whitesource", "name": "WhiteSource"},
+                  "scanner": {"id": SCANNER_ID, "name": "WhiteSource"},
                   "location": {"file": inventory['name'],
                                "dependency": {"version": inventory['version'],
                                               "package": {"name": inventory['artifactId']}}},
