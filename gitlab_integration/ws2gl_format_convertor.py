@@ -7,14 +7,16 @@ import logging
 import sys
 
 SCANNER_ID = "ws-gl-int"
-
 LICENSE_SCHEMA_V = "2.1"
 DEPENDENCY_SCHEMA_V = "14.0.2"
 DEPENDENCY = "dependency"
+DEPENDENCY_ALERTS_BASED = "dependency_alert_based"
 LICENSE = "license"
 VUL_DB_URL = "https://www.whitesourcesoftware.com/vulnerability-database"
+IS_DEBUG = True if os.environ.get("DEBUG") else False
+LOG_LEVEL = logging.DEBUG if IS_DEBUG else logging.INFO
 
-logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logging.basicConfig(level=LOG_LEVEL, stream=sys.stdout)
 
 
 def parse_args():
@@ -23,7 +25,7 @@ def parse_args():
     parser.add_argument('-u', '--userKey', help="WS User Key", dest='ws_user_key', required=True)
     parser.add_argument('-k', '--token', help="WS Project Token", dest='ws_token', required=True)
     parser.add_argument('-a', '--wsUrl', help="WS URL", dest='ws_url', default="saas")
-    parser.add_argument('-t', '--conversionType', help="Conversion Type", choices=[LICENSE, DEPENDENCY], dest='conv_type', required=True)
+    parser.add_argument('-t', '--conversionType', help="Conversion Type", choices=[LICENSE, DEPENDENCY, DEPENDENCY_ALERTS_BASED], dest='conv_type', required=True)
     parser.add_argument('-o', '--outputDir', help="Output Dir", dest='output_dir', default=".")
 
     return parser.parse_args()
@@ -36,7 +38,7 @@ def validate_json(json_to_validate: dict):
 
     if args.conv_type == LICENSE:
         url = 'https://gitlab.com/gitlab-org/security-products/analyzers/license-finder/-/raw/main/spec/fixtures/schema/v2.1.json'
-    elif args.conv_type == DEPENDENCY:
+    elif args.conv_type.startswith(DEPENDENCY):
         url = 'https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/raw/master/dist/dependency-scanning-report-format.json'
 
     resp = requests.get(url=url)
@@ -100,11 +102,13 @@ def convert_license(conn):
 def convert_dependency(conn):
     def convert_to_gl_vul(vulnerability, inventory):
         def get_solution():
-            if vulnerability.get('topFix'):
-                ret_fix = vulnerability['topFix']['fixResolution']
+            top_fix = vulnerability.get('topFix')
+            if top_fix:
+                ret_fix = vulnerability.get('fixResolutionText', top_fix['fixResolution'])
             else:
                 ret_fix = "Fix unknown"
                 logging.info(f"No fix found for {vulnerability['name']}")
+            logging.debug(f"Found fix to vulnerability: {vulnerability['name']} Fix: {ret_fix}")
 
             return ret_fix
 
@@ -130,7 +134,17 @@ def convert_dependency(conn):
 
         return gl_vul
 
-    vulnerabilities = conn.get_vulnerability(token=args.ws_token)
+    vulnerabilities = []
+    if args.conv_type == DEPENDENCY:
+        vulnerabilities = conn.get_vulnerability(token=args.ws_token)
+    elif args.conv_type == DEPENDENCY_ALERTS_BASED:
+        security_alerts = conn.get_alerts(alert_type=ws_constants.AlertTypes.SECURITY_VULNERABILITY)
+
+        for sec_alert in security_alerts:
+            vul = sec_alert['vulnerability']
+            vul['library'] = sec_alert['library']
+            vulnerabilities.append(vul)
+
     inventory_dict = ws_utilities.convert_dict_list_to_dict(conn.get_inventory(token=args.ws_token), 'keyUuid')
 
     gl_vuls = []
@@ -153,11 +167,11 @@ if __name__ == '__main__':
     if args.conv_type == LICENSE:
         ret = convert_license(ws_conn)
         filename = "gl-license-scanning-report.json"
-    elif args.conv_type == DEPENDENCY:
+    elif args.conv_type.startswith(DEPENDENCY):
         ret = convert_dependency(ws_conn)
         filename = "gl-dependency-scanning-report.json"
 
-    if os.environ.get("DEV_MODE"):
+    if IS_DEBUG:
         validate_json(ret)
         scope_name = ws_conn.get_scope_name_by_token(token=args.ws_token)
 
