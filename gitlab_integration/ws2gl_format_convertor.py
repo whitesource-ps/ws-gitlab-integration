@@ -14,9 +14,11 @@ DEPENDENCY_ALERTS_BASED = "dependency_alert_based"
 LICENSE = "license"
 VUL_DB_URL = "https://www.whitesourcesoftware.com/vulnerability-database"
 IS_DEBUG = True if os.environ.get("DEBUG") else False
+CONCAT_SCOPE_NAME = False
 LOG_LEVEL = logging.DEBUG if IS_DEBUG else logging.INFO
 
 logging.basicConfig(level=LOG_LEVEL, stream=sys.stdout)
+args = None
 
 
 def parse_args():
@@ -92,10 +94,10 @@ def convert_license(conn):
                              'version': lib.get('version'),     # TODO: ADD METHOD in ws_utilities to break LIB-1.2.3.SFX to GAV
                              'package_manager': get_package_manager(lib['type']).capitalize(),
                              'path': get_lib_locations(lib_loc, lib),
-                             'licenses': curr_licenses})
+                             'licenses': sorted(curr_licenses)})
 
     return {'version': LICENSE_SCHEMA_V,
-            'licenses': list(licenses.values()),
+            'licenses': sorted(list(licenses.values()), key=lambda k: k['id']),
             'dependencies': dependencies}
 
 
@@ -159,10 +161,10 @@ def convert_dependency(conn):
             'dependency_files': []}
 
 
-if __name__ == '__main__':
+def main():
+    global args
     args = parse_args()
     ws_conn = WS(url=args.ws_url, user_key=args.ws_user_key, token=args.ws_token, token_type=ws_constants.PROJECT)
-
     logging.info(f"Generating {args.conv_type} report")
     if args.conv_type == LICENSE:
         ret = convert_license(ws_conn)
@@ -173,14 +175,21 @@ if __name__ == '__main__':
 
     if IS_DEBUG:
         validate_json(ret)
+
+    if CONCAT_SCOPE_NAME:
         scope_name = ws_conn.get_scope_name_by_token(token=args.ws_token)
 
         for char in [':', '#', '*', '\\']:
             scope_name = scope_name.replace(char, '_')
-
         filename = f"{scope_name}-{filename}"
 
     full_path = os.path.join(args.output_dir, filename)
     logging.debug(f"Saving file to: {full_path}")
     with open(full_path, 'w') as fp:
         fp.write(json.dumps(ret))
+
+    return ret, filename
+
+
+if __name__ == '__main__':
+    main()
