@@ -1,0 +1,18 @@
+include:
+  - template: License-Scanning.gitlab-ci.yml
+
+license_scanning:
+  image:
+    name: "docker.io/whitesourcetools/ws-gl-int:latest"
+  script:
+    - python3 /opt/ws_gl_int/gitlab_integration/ws2gl_format_convertor.py -k $WS_PROJ_TOKEN -u $WS_USER_KEY -t license -o $CI_PROJECT_DIR/
+
+dependency_scanning:
+  image:
+    name: docker.io/whitesourcetools/ws-gl-int:latest
+    entrypoint: [""]
+  script:
+    - python3 /opt/ws_gl_int/gitlab_integration/ws2gl_format_convertor.py -k $WS_PROJ_TOKEN -u $WS_USER_KEY -t dependency -o $CI_PROJECT_DIR/
+  artifacts:
+    reports:
+      dependency_scanning: gl-dependency-scanning-report.json
