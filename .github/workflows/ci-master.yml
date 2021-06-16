@@ -52,6 +52,7 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/v}
             TAGS="$TAGS,${DOCKER_IMAGE}:${VERSION}"
           fi
+          echo
           echo ::set-output name=tags::${TAGS}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
