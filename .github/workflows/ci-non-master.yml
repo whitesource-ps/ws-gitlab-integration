@@ -47,10 +47,6 @@ jobs:
           DOCKER_IMAGE=whitesourcetools/ws-gl-int
           VERSION=testing
           TAGS="${DOCKER_IMAGE}:${VERSION}"
-          if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-            TAGS="$TAGS,${DOCKER_IMAGE}:${VERSION}"
-          fi
           echo ::set-output name=tags::${TAGS}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
