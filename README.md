@@ -13,6 +13,9 @@ WhiteSource lightweight Integration to populate Security and License data from W
 1. For each project define **WS_PROJ_TOKEN** and **WS_USER_KEY** variables in Projects's _Settings -> CI/CD -> Variables_ where:
    * WS_PROJ_TOKEN - WhiteSource Project Token.
    * WS_USER_KEY - WhiteSource User Key.
+   * (Optional) WS_URL - WhiteSource URL (Default: saas). For non-default, add to the syntax below -a url (e.g. saas-eu, app, app-eu, url.full.path)
+   * To create Vulnerabilities based on WhiteSource Alerts, replace `-t dependency` with `-t dependency_alert_based` 
+
 1. Create GitLab pipeline job that consists:
 ```shell
 include:
@@ -33,5 +36,4 @@ dependency_scanning:
   artifacts:
     reports:
       dependency_scanning: gl-dependency-scanning-report.json
-
 ```
