@@ -3,10 +3,10 @@ import os
 import unittest
 from unittest import TestCase, mock
 from unittest.mock import MagicMock
+from gitlab_integration import ws2gl_format_convertor
 
 debug = mock.patch.dict(os.environ, {"DEBUG": 'True'})
 debug.start()
-from gitlab_integration import ws2gl_format_convertor
 
 
 class WsGitLabIntegrationTest(TestCase):
