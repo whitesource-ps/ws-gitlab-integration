@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 import json
+import logging
 import os
-from typing import List
+import sys
+from typing import Tuple
 
 from ws_sdk import WS, ws_constants, ws_utilities
-import logging
-import sys
 
 SCANNER_ID = "ws-gl-int"
 LICENSE_SCHEMA_V = "2.1"
@@ -162,7 +162,7 @@ def convert_dependency(conn) -> dict:
             'dependency_files': []}
 
 
-def main() -> List[list, str]:
+def main() -> Tuple[list, str]:
     global args
     args = parse_args()
     ws_conn = WS(url=args.ws_url, user_key=args.ws_user_key, token=args.ws_token, token_type=ws_constants.PROJECT)

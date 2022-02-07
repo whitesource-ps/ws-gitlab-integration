@@ -10,8 +10,8 @@ debug.start()
 
 
 class WsGitLabIntegrationTest(TestCase):
-    user_key = os.environ.get('WS_USER_KEY')
-    ws_token = os.environ.get('WS_SCOPE_PROJ')
+    user_key = os.environ['WS_USER_KEY']
+    ws_token = os.environ['WS_SCOPE_PROJ']
     ws2gl_format_convertor.parse_args = MagicMock()
     ws2gl_format_convertor.parse_args.return_value.ws_user_key = user_key
     ws2gl_format_convertor.parse_args.return_value.ws_token = ws_token
