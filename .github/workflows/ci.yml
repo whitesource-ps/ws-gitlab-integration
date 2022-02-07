@@ -2,11 +2,9 @@ name: CI
 on:
   push:
     branches:
-      - '**'
-      tags:
-        - '*'
+        - '**'
     tags:
-      - '*'
+        - '*'
   schedule:
     - cron: '0 4 * * *'
 jobs:
