@@ -22,3 +22,6 @@ local-env.*
 /venv/
 /build/
 /dist/
+
+ws_gitlab_integration/__pycache__/
+ws_gitlab_integration/tests/__pycache__/
