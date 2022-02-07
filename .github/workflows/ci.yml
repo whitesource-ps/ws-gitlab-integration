@@ -19,9 +19,6 @@ jobs:
           echo "TOOL_DIR=$TOOL_NAME" >> $GITHUB_ENV
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             echo "VERSION=$(echo ${{github.ref}} |  sed -r 's/^[\/a-zA-z-]+//')" >> $GITHUB_ENV
-            echo "INC_PKG_MAN=-i all" >> $GITHUB_ENV
-            if [[ $VERSION != *@(a|b)* ]]; then
-            fi
           fi
       - uses: actions/checkout@v2
       - uses: UnicornGlobal/trufflehog-actions-scan@master
