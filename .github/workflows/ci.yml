@@ -1,27 +1,44 @@
-name: WS PS GitLab Integration - Master
+name: CI
 on:
   push:
     branches:
-      - 'master'
+      - '**'
+      tags:
+        - '*'
     tags:
       - '*'
   schedule:
-    - cron: '0 4 * * 6'
+    - cron: '0 4 * * *'
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8]
     steps:
+      - name: Set Environment Variables
+        run: |
+          TOOL_NAME=$(echo '${{ github.repository }}' |awk -F '/' '{gsub(/-/, "_", $0) ;print $NF}')
+          echo "TOOL_NAME=$TOOL_NAME" >> $GITHUB_ENV
+          echo "VERSION=0.0.0.ci0" >> $GITHUB_ENV
+          echo "TOOL_DIR=$TOOL_NAME" >> $GITHUB_ENV
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            echo "VERSION=$(echo ${{github.ref}} |  sed -r 's/^[\/a-zA-z-]+//')" >> $GITHUB_ENV
+            echo "INC_PKG_MAN=-i all" >> $GITHUB_ENV
+            if [[ $VERSION != *@(a|b)* ]]; then
+            fi
+          fi
       - uses: actions/checkout@v2
       - uses: UnicornGlobal/trufflehog-actions-scan@master
         with:
           branch: ${{ github.head_ref }}
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.9
+      - name: Set package version
+        run: |
+          sed -E -i  "s/^__version__ = \"[a-z0-9\.]+\"/__version__ = \"$VERSION\"/g"  ${{ env.TOOL_DIR }}/_version.py
+      - uses: UnicornGlobal/trufflehog-actions-scan@master
+        with:
+          branch: ${{ github.head_ref }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -34,15 +51,22 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Perform integration test and compare to existing JSON
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         env:
           WS_USER_KEY: ${{ secrets.WS_USER_KEY }}
           WS_SCOPE_PROJ: ${{ secrets.WS_SCOPE_PROJ_WEBGOAT_INTEGRATION_TESTS }}
         run: python -m unittest
       - name: Full test (License)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_WEBGOAT_INTEGRATION_TESTS }} -t license
       - name: Full test (Security Violance)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_WEBGOAT_INTEGRATION_TESTS }} -t dependency -o /tmp
+      - name: Full test (Security Violance alert based)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: python gitlab_integration/ws2gl_format_convertor.py -u ${{ secrets.WS_USER_KEY }} -k ${{ secrets.WS_SCOPE_PROJ_WEBGOAT_INTEGRATION_TESTS }} -t dependency_alert_based -o /tmp
       - name: Prepare tag
+        if: contains(github.ref, 'refs/tags/v')
         id: prep
         run: |
           DOCKER_IMAGE=whitesourcetools/ws-gl-int
@@ -54,8 +78,10 @@ jobs:
           fi
           echo ::set-output name=tags::${TAGS}
       - name: Set up Docker Buildx
+        if: contains(github.ref, 'refs/tags/v')
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
+        if: contains(github.ref, 'refs/tags/v')
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -68,6 +94,7 @@ jobs:
           push: true
           tags: ${{ steps.prep.outputs.tags }}
       - name: confluence-markdown-sync
+        if: contains(github.ref, 'refs/tags/v')
         uses: cupcakearmy/confluence-markdown-sync@v1
         with:
           from: README.md

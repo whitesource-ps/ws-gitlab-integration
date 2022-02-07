@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import json
 import os
+from typing import List
 
 from ws_sdk import WS, ws_constants, ws_utilities
 import logging
@@ -33,7 +34,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def validate_json(json_to_validate: dict):
+def validate_json(json_to_validate: dict) -> bool:
     from jsonschema import validate, exceptions as json_exceptions
     import requests
     import json
@@ -54,8 +55,8 @@ def validate_json(json_to_validate: dict):
     return True
 
 
-def convert_license(conn):
-    def get_lib_locations(library_location, library):
+def convert_license(conn) -> dict:
+    def get_lib_locations(library_location, library) -> str:
         locations = library_location.get('locations')
         if len(locations):
             if len(locations) > 1:
@@ -67,7 +68,7 @@ def convert_license(conn):
 
         return loc_name
 
-    def get_package_manager(language):
+    def get_package_manager(language) -> str:
         pkg_man = ws_utilities.get_package_managers_by_language(language)
         return "unknown" if not pkg_man else pkg_man[0]
 
@@ -101,9 +102,9 @@ def convert_license(conn):
             'dependencies': dependencies}
 
 
-def convert_dependency(conn):
-    def convert_to_gl_vul(vulnerability, inventory):
-        def get_solution():
+def convert_dependency(conn) -> dict:
+    def convert_to_gl_vul(vulnerability, inventory) -> dict:
+        def get_solution() -> str:
             top_fix = vulnerability.get('topFix')
             if top_fix:
                 ret_fix = vulnerability.get('fixResolutionText', top_fix['fixResolution'])
@@ -161,10 +162,11 @@ def convert_dependency(conn):
             'dependency_files': []}
 
 
-def main():
+def main() -> List[list, str]:
     global args
     args = parse_args()
     ws_conn = WS(url=args.ws_url, user_key=args.ws_user_key, token=args.ws_token, token_type=ws_constants.PROJECT)
+
     logging.info(f"Generating {args.conv_type} report")
     if args.conv_type == LICENSE:
         ret = convert_license(ws_conn)
@@ -193,3 +195,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
